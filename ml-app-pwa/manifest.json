@@ -1,0 +1,16 @@
+﻿{
+  "name": "Access Salud - Portal ART",
+  "short_name": "Access Salud",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0b3558",
+  "theme_color": "#0b3558",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "access-logo.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png"
+    }
+  ]
+}
