@@ -1,0 +1,6 @@
+@MLApp.Api_HostAddress = http://localhost:5005
+
+GET {{MLApp.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
