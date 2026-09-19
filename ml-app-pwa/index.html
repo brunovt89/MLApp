@@ -55,10 +55,20 @@
           Ingresar al Portal
         </button>
       </form>
-      <div class="mt-4 text-center">
-        <p class="text-[11px] text-slate-300">
-          🌟 Usuario completo sugerido: DNI <strong>18599931</strong> (32 turnos + 37 formularios IAMI, IET, FPA, AM)
-        </p>
+      <div class="mt-4 pt-3 border-t border-slate-700/60 text-center space-y-2">
+        <p class="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Perfiles de prueba disponibles:</p>
+        <div class="flex flex-col gap-1.5 text-left text-xs">
+          <button type="button" onclick="document.getElementById('input-dni').value='44798899'" 
+            class="p-2 rounded-xl bg-slate-700/50 hover:bg-slate-700 border border-slate-600/60 text-slate-200 flex items-center justify-between transition">
+            <span>🔹 <strong>DNI 44798899</strong> (Rodriguez Dylan)</span>
+            <span class="text-[10px] text-teal-300 font-semibold">Turno Futuro 2026</span>
+          </button>
+          <button type="button" onclick="document.getElementById('input-dni').value='18599931'" 
+            class="p-2 rounded-xl bg-slate-700/50 hover:bg-slate-700 border border-slate-600/60 text-slate-200 flex items-center justify-between transition">
+            <span>🔹 <strong>DNI 18599931</strong> (Riquelme José)</span>
+            <span class="text-[10px] text-sky-300 font-semibold">32 Turnos + 37 Forms</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -159,14 +169,19 @@
               </div>
             </div>
 
-            <div class="flex items-center justify-between pt-2 border-t border-white/10">
+            <div class="flex items-center justify-between pt-2 border-t border-white/10 gap-2">
               <div class="flex items-center gap-2 text-xs text-sky-200">
                 <i data-lucide="clock" class="w-4 h-4"></i>
                 <span id="home-turno-hora" class="font-bold">--</span>
               </div>
-              <a id="btn-mapa" href="#" target="_blank" class="px-3.5 py-1.5 bg-teal-500 hover:bg-teal-400 active:bg-teal-600 text-white rounded-xl text-xs font-bold shadow transition">
-                Cómo llegar
-              </a>
+              <div class="flex items-center gap-1.5">
+                <a id="btn-home-calendar" href="#" target="_blank" class="px-2.5 py-1.5 bg-white/20 hover:bg-white/30 active:bg-white/10 text-white rounded-xl text-xs font-bold transition flex items-center gap-1" title="Agendar en Google Calendar">
+                  <i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i> Agendar
+                </a>
+                <a id="btn-mapa" href="#" target="_blank" class="px-3 py-1.5 bg-teal-500 hover:bg-teal-400 active:bg-teal-600 text-white rounded-xl text-xs font-bold shadow transition">
+                  Llegar
+                </a>
+              </div>
             </div>
           </div>
         </div>
@@ -401,6 +416,29 @@
       cargarExamenes(dni);
     }
 
+    function generarLinkGoogleCalendar(titulo, fechaHoraStr, prestador, direccion) {
+      if (!fechaHoraStr) return '#';
+      const inicio = new Date(fechaHoraStr);
+      const fin = new Date(inicio.getTime() + 45 * 60000); // 45 minutos de duración estimada
+
+      const pad = (n) => String(n).padStart(2, '0');
+      const formatearUTC = (d) => {
+        return d.getUTCFullYear() +
+          pad(d.getUTCMonth() + 1) +
+          pad(d.getUTCDate()) + 'T' +
+          pad(d.getUTCHours()) +
+          pad(d.getUTCMinutes()) +
+          pad(d.getUTCSeconds()) + 'Z';
+      };
+
+      const dates = `${formatearUTC(inicio)}/${formatearUTC(fin)}`;
+      const details = encodeURIComponent(`Turno médico de Medicina Laboral / ART.\nLugar: ${prestador || 'Centro Médico'}\nDirección: ${direccion || ''}\nPor favor presentarse con DNI y Credencial Digital.`);
+      const location = encodeURIComponent(`${prestador || ''}, ${direccion || ''}`);
+      const text = encodeURIComponent(`Turno ART: ${titulo || 'Atención Médica'}`);
+
+      return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${dates}&details=${details}&location=${location}`;
+    }
+
     async function cargarTurnos(dni) {
       const container = document.getElementById('lista-turnos');
       try {
@@ -414,13 +452,25 @@
           document.getElementById('home-turno-hora').textContent = `${f.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })} ${f.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} hs`;
           document.getElementById('home-turno-prestador').textContent = t.prestadorNombre || 'Centro Médico Asignado';
           document.getElementById('home-turno-direccion').textContent = `${t.prestadorDireccion || ''} (${t.prestadorLocalidad || ''})`;
-          document.getElementById('btn-mapa').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((t.prestadorNombre || '') + ' ' + (t.prestadorDireccion || ''))}`;
-          document.getElementById('btn-mapa').classList.remove('hidden');
+          
+          const btnMapa = document.getElementById('btn-mapa');
+          if (btnMapa) {
+            btnMapa.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((t.prestadorNombre || '') + ' ' + (t.prestadorDireccion || ''))}`;
+            btnMapa.classList.remove('hidden');
+          }
+
+          const btnHomeCal = document.getElementById('btn-home-calendar');
+          if (btnHomeCal) {
+            btnHomeCal.href = generarLinkGoogleCalendar(t.especialidadNombre, t.fechaHora, t.prestadorNombre, `${t.prestadorDireccion || ''} (${t.prestadorLocalidad || ''})`);
+            btnHomeCal.classList.remove('hidden');
+          }
         } else {
           document.getElementById('home-turno-prestador').textContent = 'Sin turnos asignados';
           document.getElementById('home-turno-direccion').textContent = 'No hay turnos pendientes en este momento.';
           document.getElementById('home-turno-hora').textContent = 'N/A';
           document.getElementById('btn-mapa').classList.add('hidden');
+          const btnHomeCal = document.getElementById('btn-home-calendar');
+          if (btnHomeCal) btnHomeCal.classList.add('hidden');
         }
 
         // Renderizar pestaña Turnos
@@ -431,8 +481,9 @@
           container.innerHTML = turnosData.map(t => {
             const f = new Date(t.fechaHora);
             const cumplido = t.concurrio === '1';
+            const calUrl = generarLinkGoogleCalendar(t.especialidadNombre, t.fechaHora, t.prestadorNombre, `${t.prestadorDireccion || ''} (${t.prestadorLocalidad || ''})`);
             return `
-              <div class="bg-white rounded-3xl p-4 shadow-sm border border-slate-200/80 space-y-1.5">
+              <div class="bg-white rounded-3xl p-4 shadow-sm border border-slate-200/80 space-y-2.5">
                 <div class="flex justify-between items-start">
                   <h4 class="font-bold text-slate-900 text-sm">${t.especialidadNombre || 'Atención Médica'}</h4>
                   <span class="text-[10px] font-semibold px-2.5 py-0.5 rounded-full ${cumplido ? 'bg-emerald-100 text-emerald-800' : 'bg-sky-100 text-sky-800'}">
@@ -440,10 +491,18 @@
                   </span>
                 </div>
                 <p class="text-xs text-sky-800 font-bold">${t.prestadorNombre || 'Centro de Atención'}</p>
-                <div class="text-xs text-slate-500 pt-1 space-y-1">
+                <div class="text-xs text-slate-500 pt-0.5 space-y-1">
                   <p class="flex items-center gap-1.5"><i data-lucide="clock" class="w-3.5 h-3.5 text-slate-400"></i> ${f.toLocaleString('es-AR', { dateStyle: 'medium', timeStyle: 'short' })} hs</p>
                   <p class="flex items-center gap-1.5"><i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400"></i> ${t.prestadorDireccion || ''} (${t.prestadorLocalidad || ''})</p>
                   ${t.profesionalNombre ? `<p class="flex items-center gap-1.5"><i data-lucide="stethoscope" class="w-3.5 h-3.5 text-slate-400"></i> Dr/a. ${t.profesionalNombre}</p>` : ''}
+                </div>
+                <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                  <a href="${calUrl}" target="_blank" class="flex-1 py-2 px-3 bg-sky-50 hover:bg-sky-100 active:bg-sky-200 text-sky-800 border border-sky-200 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                    <i data-lucide="calendar-plus" class="w-4 h-4 text-sky-600"></i> Agendar en Google Calendar
+                  </a>
+                  <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((t.prestadorNombre || '') + ' ' + (t.prestadorDireccion || ''))}" target="_blank" class="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-1 transition">
+                    <i data-lucide="navigation" class="w-3.5 h-3.5"></i> Mapa
+                  </a>
                 </div>
               </div>
             `;
@@ -476,38 +535,54 @@
           return;
         }
 
-        // Renderizar cada siniestro y cargar sus formularios en paralelo
-        container.innerHTML = siniestrosData.map(s => `
-          <div id="card-siniestro-${s.siniestro}" class="bg-white rounded-3xl p-4 shadow-sm border border-slate-200/80 space-y-3">
-            <div class="flex justify-between items-center pb-2 border-b border-slate-100">
-              <div>
-                <span class="text-xs font-black text-slate-900">Siniestro #${s.siniestro}</span>
-                <p class="text-[11px] text-slate-500">Accidente: ${s.fechaHoraAccidente ? new Date(s.fechaHoraAccidente).toLocaleDateString('es-AR') : 'Registrado'}</p>
+        // Renderizar cada siniestro como un ACORDEÓN colapsable (el primero abierto por defecto)
+        container.innerHTML = siniestrosData.map((s, idx) => {
+          const abierto = idx === 0; // El siniestro más reciente viene desplegado
+          return `
+            <div id="card-siniestro-${s.siniestro}" class="bg-white rounded-3xl shadow-sm border border-slate-200/80 overflow-hidden transition-all duration-200">
+              <!-- Cabecera Clave / Clickeable para Desplegar -->
+              <div onclick="toggleAcordeonSiniestro(${s.siniestro})" 
+                class="p-4 cursor-pointer hover:bg-slate-50 active:bg-slate-100 transition select-none flex justify-between items-center">
+                <div class="space-y-0.5 min-w-0 pr-2">
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-black text-slate-900">Siniestro #${s.siniestro}</span>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">${s.estado || 'Activo'}</span>
+                  </div>
+                  <p class="text-[11px] text-slate-500">
+                    Accidente: <strong>${s.fechaHoraAccidente ? new Date(s.fechaHoraAccidente).toLocaleDateString('es-AR') : 'Registrado'}</strong> • ${s.prestadorNombre || 'Centro Asignado'}
+                  </p>
+                  <p id="label-count-${s.siniestro}" class="text-[10px] text-sky-700 font-semibold pt-0.5">
+                    Consultando formularios...
+                  </p>
+                </div>
+                <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
+                  <i id="chevron-siniestro-${s.siniestro}" data-lucide="chevron-down" 
+                    class="w-4 h-4 text-slate-500 transition-transform duration-300 ${abierto ? 'rotate-180' : ''}"></i>
+                </div>
               </div>
-              <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800">${s.estado || 'Activo'}</span>
-            </div>
 
-            <div class="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-2xl space-y-1">
-              <p><strong>Aseguradora:</strong> ${s.artNombre || 'Federación Patronal ART'}</p>
-              <p><strong>Clínica de Derivación:</strong> ${s.prestadorNombre || 'Centro Asignado'}</p>
-            </div>
+              <!-- Contenido Desplegable del Siniestro -->
+              <div id="body-siniestro-${s.siniestro}" class="${abierto ? 'block' : 'hidden'} px-4 pb-4 pt-1 space-y-3 border-t border-slate-100">
+                <div class="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-2xl space-y-1">
+                  <p><strong>Aseguradora:</strong> ${s.artNombre || 'Federación Patronal ART'}</p>
+                  <p><strong>Clínica de Derivación:</strong> ${s.prestadorNombre || 'Centro Asignado'}</p>
+                </div>
 
-            <div class="pt-1 space-y-2">
-              <div class="flex items-center justify-between">
-                <h5 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                  <i data-lucide="clipboard-list" class="w-3.5 h-3.5 text-sky-700"></i> Historial de Formularios Médicos
-                </h5>
-                <span id="label-count-${s.siniestro}" class="text-[10px] text-slate-400">Consultando...</span>
-              </div>
-              <div id="forms-siniestro-${s.siniestro}" class="space-y-2">
-                <div class="p-3 text-center text-slate-400 text-xs flex items-center justify-center gap-2">
-                  <div class="w-3 h-3 border-2 border-sky-600 border-t-transparent rounded-full animate-spin"></div>
-                  Cargando formularios clínicos...
+                <div class="space-y-2">
+                  <h5 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                    <i data-lucide="clipboard-list" class="w-3.5 h-3.5 text-sky-700"></i> Evolución Médica (Más recientes primero)
+                  </h5>
+                  <div id="forms-siniestro-${s.siniestro}" class="space-y-2">
+                    <div class="p-3 text-center text-slate-400 text-xs flex items-center justify-center gap-2">
+                      <div class="w-3 h-3 border-2 border-sky-600 border-t-transparent rounded-full animate-spin"></div>
+                      Cargando formularios clínicos...
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        `).join('');
+          `;
+        }).join('');
 
         try { lucide.createIcons(); } catch(e) {}
 
@@ -523,34 +598,58 @@
       }
     }
 
+    function toggleAcordeonSiniestro(idSiniestro) {
+      const body = document.getElementById(`body-siniestro-${idSiniestro}`);
+      const chevron = document.getElementById(`chevron-siniestro-${idSiniestro}`);
+      if (!body || !chevron) return;
+
+      const estaOculto = body.classList.contains('hidden');
+      if (estaOculto) {
+        body.classList.remove('hidden');
+        chevron.classList.add('rotate-180');
+      } else {
+        body.classList.add('hidden');
+        chevron.classList.remove('rotate-180');
+      }
+      try { lucide.createIcons(); } catch(e) {}
+    }
+
     async function cargarFormulariosDeSiniestro(idSiniestro) {
       const boxForms = document.getElementById(`forms-siniestro-${idSiniestro}`);
       const labelCount = document.getElementById(`label-count-${idSiniestro}`);
       try {
         const formularios = await apiRequest(`/Siniestro/${idSiniestro}/Formularios`);
-        formulariosCache[idSiniestro] = formularios || [];
+        
+        // ORDENAR: Lo más nuevo arriba de todo, los más viejos abajo
+        const formsOrdenados = (formularios || []).sort((a, b) => {
+          const tA = a.fechaHoraFormulario ? new Date(a.fechaHoraFormulario).getTime() : 0;
+          const tB = b.fechaHoraFormulario ? new Date(b.fechaHoraFormulario).getTime() : 0;
+          return tB - tA;
+        });
 
-        if (labelCount) labelCount.textContent = `(${formularios.length}) - Tocá para ver detalle`;
+        formulariosCache[idSiniestro] = formsOrdenados;
+
+        if (labelCount) labelCount.textContent = `📋 ${formsOrdenados.length} Formularios médicos cargados • Tocá para ${document.getElementById(`body-siniestro-${idSiniestro}`)?.classList.contains('hidden') ? 'abrir' : 'plegar'}`;
 
         if (!boxForms) return;
-        if (!formularios || formularios.length === 0) {
+        if (formsOrdenados.length === 0) {
           boxForms.innerHTML = '<p class="text-center text-slate-400 text-xs py-2">No hay formularios emitidos para este siniestro aún.</p>';
           return;
         }
 
-        boxForms.innerHTML = formularios.map(f => {
+        boxForms.innerHTML = formsOrdenados.map(f => {
           const tipoKey = (f.formulario || '').toLowerCase();
           const info = FORM_INFO[tipoKey] || { titulo: `Formulario ${f.formulario}`, badge: 'bg-slate-100 text-slate-700 border-slate-200' };
           const fechaFmt = f.fechaHoraFormulario ? new Date(f.fechaHoraFormulario).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' }) : 'Registrado';
 
           return `
             <div onclick="abrirModalFormulario(${idSiniestro}, ${f.nroFormulario})" 
-              class="p-3 rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-sky-50/80 hover:border-sky-300 transition cursor-pointer space-y-1.5 shadow-sm">
+              class="p-3 rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-sky-50/80 active:bg-sky-100/90 hover:border-sky-300 transition cursor-pointer space-y-1.5 shadow-sm">
               <div class="flex justify-between items-center">
                 <span class="text-[10px] font-bold px-2 py-0.5 rounded-md border ${info.badge}">
                   ${(f.formulario || '').toUpperCase()}
                 </span>
-                <span class="text-[10px] text-slate-400 font-mono">${fechaFmt} hs</span>
+                <span class="text-[10px] text-slate-500 font-mono font-medium">${fechaFmt} hs</span>
               </div>
               <div class="flex justify-between items-center">
                 <p class="text-xs font-bold text-slate-800">${info.titulo}</p>
@@ -618,11 +717,13 @@
       }
 
       document.getElementById('modal-formulario').classList.remove('hidden');
+      document.body.style.overflow = 'hidden'; // Bloquea el scroll del fondo
       try { lucide.createIcons(); } catch(e) {}
     }
 
     function cerrarModal() {
       document.getElementById('modal-formulario').classList.add('hidden');
+      document.body.style.overflow = 'auto'; // Restaura el scroll del fondo
     }
 
     async function cargarExamenes(dni) {
