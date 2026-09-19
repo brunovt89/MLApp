@@ -517,21 +517,47 @@
 
       const webUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${dates}&details=${encodeURIComponent(desc)}&location=${encodeURIComponent(loc)}`;
 
-      // Detección de dispositivo Android
-      const isAndroid = /android/i.test(navigator.userAgent);
+      // Generar archivo estándar iCalendar (.ics) en memoria
+      const icsContent = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//Access Salud//MLApp ART//ES',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH',
+        'BEGIN:VEVENT',
+        `DTSTAMP:${formatearUTC(new Date())}`,
+        `DTSTART:${formatearUTC(inicio)}`,
+        `DTEND:${formatearUTC(fin)}`,
+        `SUMMARY:${title}`,
+        `DESCRIPTION:${desc.replace(/\n/g, '\\n')}`,
+        `LOCATION:${loc}`,
+        'STATUS:CONFIRMED',
+        'END:VEVENT',
+        'END:VCALENDAR'
+      ].join('\r\n');
 
-      if (isAndroid) {
-        // En Android lanzamos el Intent nativo hacia com.google.android.calendar o la app de calendario predeterminada
-        // con fallback transparente a la web si no está instalada
-        const beginTime = inicio.getTime();
-        const endTime = fin.getTime();
-        const intentUrl = `intent://calendar/event#Intent;action=android.intent.action.INSERT;type=vnd.android.cursor.item/event;S.title=${encodeURIComponent(title)};S.description=${encodeURIComponent(desc)};S.eventLocation=${encodeURIComponent(loc)};l.beginTime=${beginTime};l.endTime=${endTime};S.browser_fallback_url=${encodeURIComponent(webUrl)};end`;
+      // En dispositivos móviles (Android / iOS), descargar o abrir el archivo .ics abre directamente el selector de Calendario nativo
+      const isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
 
-        window.location.href = intentUrl;
-      } else {
-        // En navegadores de escritorio, iOS u otros abrimos Google Calendar en nueva pestaña
-        window.open(webUrl, '_blank');
+      if (isMobile) {
+        try {
+          const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.setAttribute('download', `Turno_ART_${inicio.toISOString().slice(0,10)}.ics`);
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          setTimeout(() => window.URL.revokeObjectURL(url), 2000);
+          return;
+        } catch (err) {
+          console.warn('Fallback a URL web por error de blob:', err);
+        }
       }
+
+      // En PC o fallback, abrir Google Calendar web
+      window.open(webUrl, '_blank');
     }
 
     async function cargarTurnos(dni) {
