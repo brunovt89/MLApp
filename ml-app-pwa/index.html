@@ -217,9 +217,9 @@
                 <span id="home-turno-hora" class="font-bold">--</span>
               </div>
               <div class="flex items-center gap-1.5">
-                <a id="btn-home-calendar" href="#" target="_blank" class="px-2.5 py-1.5 bg-white/20 hover:bg-white/30 active:bg-white/10 text-white rounded-xl text-xs font-bold transition flex items-center gap-1" title="Agendar en Google Calendar">
+                <button id="btn-home-calendar" class="px-2.5 py-1.5 bg-white/20 hover:bg-white/30 active:bg-white/10 text-white rounded-xl text-xs font-bold transition flex items-center gap-1" title="Agendar en Google Calendar">
                   <i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i> Agendar
-                </a>
+                </button>
                 <a id="btn-mapa" href="#" target="_blank" class="px-3 py-1.5 bg-teal-500 hover:bg-teal-400 active:bg-teal-600 text-white rounded-xl text-xs font-bold shadow transition">
                   Llegar
                 </a>
@@ -495,10 +495,10 @@
       cargarExamenes(dni);
     }
 
-    function generarLinkGoogleCalendar(titulo, fechaHoraStr, prestador, direccion) {
-      if (!fechaHoraStr) return '#';
+    function abrirAgendarCalendar(titulo, fechaHoraStr, prestador, direccion) {
+      if (!fechaHoraStr) return;
       const inicio = new Date(fechaHoraStr);
-      const fin = new Date(inicio.getTime() + 45 * 60000); // 45 minutos de duración estimada
+      const fin = new Date(inicio.getTime() + 45 * 60000); // 45 minutos estimados
 
       const pad = (n) => String(n).padStart(2, '0');
       const formatearUTC = (d) => {
@@ -511,11 +511,27 @@
       };
 
       const dates = `${formatearUTC(inicio)}/${formatearUTC(fin)}`;
-      const details = encodeURIComponent(`Turno médico de Medicina Laboral / ART.\nLugar: ${prestador || 'Centro Médico'}\nDirección: ${direccion || ''}\nPor favor presentarse con DNI y Credencial Digital.`);
-      const location = encodeURIComponent(`${prestador || ''}, ${direccion || ''}`);
-      const text = encodeURIComponent(`Turno ART: ${titulo || 'Atención Médica'}`);
+      const title = `Turno ART: ${titulo || 'Atención Médica'}`;
+      const desc = `Turno médico de Medicina Laboral / ART.\nLugar: ${prestador || 'Centro Médico'}\nDirección: ${direccion || ''}\nPresentarse con DNI y Credencial Digital.`;
+      const loc = `${prestador || ''}, ${direccion || ''}`;
 
-      return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${dates}&details=${details}&location=${location}`;
+      const webUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${dates}&details=${encodeURIComponent(desc)}&location=${encodeURIComponent(loc)}`;
+
+      // Detección de dispositivo Android
+      const isAndroid = /android/i.test(navigator.userAgent);
+
+      if (isAndroid) {
+        // En Android lanzamos el Intent nativo hacia com.google.android.calendar o la app de calendario predeterminada
+        // con fallback transparente a la web si no está instalada
+        const beginTime = inicio.getTime();
+        const endTime = fin.getTime();
+        const intentUrl = `intent://calendar/event#Intent;action=android.intent.action.INSERT;type=vnd.android.cursor.item/event;S.title=${encodeURIComponent(title)};S.description=${encodeURIComponent(desc)};S.eventLocation=${encodeURIComponent(loc)};l.beginTime=${beginTime};l.endTime=${endTime};S.browser_fallback_url=${encodeURIComponent(webUrl)};end`;
+
+        window.location.href = intentUrl;
+      } else {
+        // En navegadores de escritorio, iOS u otros abrimos Google Calendar en nueva pestaña
+        window.open(webUrl, '_blank');
+      }
     }
 
     async function cargarTurnos(dni) {
@@ -553,7 +569,7 @@
           const btnHomeCal = document.getElementById('btn-home-calendar');
           if (btnHomeCal) {
             if (esFuturo) {
-              btnHomeCal.href = generarLinkGoogleCalendar(t.especialidadNombre, t.fechaHora, t.prestadorNombre, `${t.prestadorDireccion || ''} (${t.prestadorLocalidad || ''})`);
+              btnHomeCal.onclick = () => abrirAgendarCalendar(t.especialidadNombre, t.fechaHora, t.prestadorNombre, `${t.prestadorDireccion || ''} (${t.prestadorLocalidad || ''})`);
               btnHomeCal.classList.remove('hidden');
             } else {
               btnHomeCal.classList.add('hidden');
@@ -673,9 +689,10 @@
                 
                 <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
                   ${esFuturo ? `
-                    <a href="${calUrl}" target="_blank" class="flex-1 py-2 px-3 bg-sky-50 hover:bg-sky-100 active:bg-sky-200 text-sky-800 border border-sky-200 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition">
-                      <i data-lucide="calendar-plus" class="w-4 h-4 text-sky-600"></i> Agendar en Google Calendar
-                    </a>
+                    <button onclick="abrirAgendarCalendar('${(t.especialidadNombre || 'Atención Médica').replace(/'/g, "\\'")}', '${t.fechaHora}', '${(t.prestadorNombre || '').replace(/'/g, "\\'")}', '${((t.prestadorDireccion || '') + ' (' + (t.prestadorLocalidad || '') + ')').replace(/'/g, "\\'")}')" 
+                      class="flex-1 py-2 px-3 bg-sky-50 hover:bg-sky-100 active:bg-sky-200 text-sky-800 border border-sky-200 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                      <i data-lucide="calendar-plus" class="w-4 h-4 text-sky-600"></i> Agendar en Calendario
+                    </button>
                   ` : `
                     <span class="text-[11px] text-slate-400 italic">Turno finalizado</span>
                   `}
