@@ -35,7 +35,7 @@
     </div>
 
     <div class="bg-slate-800/90 backdrop-blur-md p-6 rounded-3xl border border-slate-700 shadow-2xl">
-      <form id="form-login" class="space-y-4">
+      <form id="form-login" onsubmit="loginTrabajador(event); return false;" class="space-y-4">
         <div>
           <label class="block text-xs font-bold uppercase text-slate-300">Número de Documento (DNI)</label>
           <input type="number" id="input-dni" required value="18599931" placeholder="Ej. 18599931"
@@ -50,7 +50,7 @@
           <i data-lucide="alert-triangle" class="w-4 h-4 text-red-400 flex-shrink-0"></i>
           <span id="login-error-msg"></span>
         </div>
-        <button type="submit" id="btn-submit"
+        <button type="submit" id="btn-submit" onclick="loginTrabajador(event)"
           class="w-full py-3.5 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 active:from-blue-700 text-white font-bold rounded-2xl shadow-lg shadow-blue-600/30 transition">
           Ingresar al Portal
         </button>
@@ -369,7 +369,10 @@
   </div>
 
   <script>
-    const API_BASE = 'https://ejemplo.com/MLApp/api';
+    // Detección inteligente de entorno: Si se ejecuta en localhost usa la API local :5000; de lo contrario el servidor de producción
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const API_BASE = isLocalhost ? 'http://localhost:5000/api' : 'https://ejemplo.com/MLApp/api';
+    const API_BASE_FALLBACK = isLocalhost ? 'https://ejemplo.com/MLApp/api' : 'http://localhost:5000/api';
     const API_KEY = 'ML_App_Mobile_Key_Test_2026';
 
     let currentUser = null;
@@ -390,12 +393,27 @@
       const headers = { 'X-Api-Key': API_KEY, 'Content-Type': 'application/json' };
       const opts = { method, headers };
       if (body) opts.body = JSON.stringify(body);
-      const res = await fetch(`${API_BASE}${endpoint}`, opts);
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || `Error ${res.status}`);
+      
+      try {
+        const res = await fetch(`${API_BASE}${endpoint}`, opts);
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.message || `Error ${res.status}`);
+        }
+        return await res.json();
+      } catch (errPrimario) {
+        console.warn(`Error en API principal (${API_BASE}), intentando fallback...`, errPrimario);
+        try {
+          const resFall = await fetch(`${API_BASE_FALLBACK}${endpoint}`, opts);
+          if (!resFall.ok) {
+            const err = await resFall.json().catch(() => ({}));
+            throw new Error(err.message || `Error ${resFall.status}`);
+          }
+          return await resFall.json();
+        } catch (errFallback) {
+          throw errPrimario;
+        }
       }
-      return res.json();
     }
 
     function generarQRUrl(texto, tamano = 150) {
@@ -958,16 +976,22 @@
       }
     }
 
-    document.getElementById('form-login').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const dni = document.getElementById('input-dni').value;
-      const fecha = document.getElementById('input-fecha').value;
+    async function loginTrabajador(e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      const inputDni = document.getElementById('input-dni');
+      const dni = inputDni ? inputDni.value : '18599931';
+      const fecha = document.getElementById('input-fecha')?.value;
       const btn = document.getElementById('btn-submit');
       const errBox = document.getElementById('login-error');
 
-      btn.textContent = 'Validando con ART...';
-      btn.disabled = true;
-      errBox.classList.add('hidden');
+      if (btn) {
+        btn.textContent = 'Validando con ART...';
+        btn.disabled = true;
+      }
+      if (errBox) errBox.classList.add('hidden');
 
       try {
         const res = await apiRequest('/Auth/login', 'POST', {
@@ -979,14 +1003,24 @@
         sessionStorage.setItem('user', JSON.stringify(currentUser));
         mostrarApp();
       } catch (err) {
-        document.getElementById('login-error-msg').textContent = err.message || 'Error de autenticación';
-        errBox.classList.remove('hidden');
+        console.error("Error al iniciar sesión:", err);
+        const errMsg = document.getElementById('login-error-msg');
+        if (errMsg) errMsg.textContent = err.message || 'Error de autenticación o de conexión con la ART';
+        if (errBox) errBox.classList.remove('hidden');
       } finally {
-        btn.textContent = 'Ingresar al Portal';
-        btn.disabled = false;
-        lucide.createIcons();
+        if (btn) {
+          btn.textContent = 'Ingresar al Portal';
+          btn.disabled = false;
+        }
+        try { lucide.createIcons(); } catch(e) {}
       }
-    });
+    }
+
+    // Vinculación por event listener
+    const formLoginEl = document.getElementById('form-login');
+    if (formLoginEl) {
+      formLoginEl.addEventListener('submit', loginTrabajador);
+    }
 
     document.getElementById('btn-logout').addEventListener('click', () => {
       sessionStorage.removeItem('user');
