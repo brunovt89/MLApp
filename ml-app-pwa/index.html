@@ -24,8 +24,46 @@
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased selection:bg-sky-500 selection:text-white">
 
-  <!-- VISTA DE LOGIN -->
-  <div id="view-login" class="min-h-screen bg-gradient-to-b from-[#0b3558] to-[#071f34] flex flex-col justify-center px-4 py-8 max-w-md mx-auto">
+  <!-- PANTALLA DE ACCESO PROTEGIDO (GATEKEEPER TESTING) -->
+  <div id="view-gatekeeper" class="min-h-screen bg-gradient-to-b from-[#071f34] via-[#0b3558] to-[#04111d] flex flex-col justify-center px-4 py-8 max-w-md mx-auto relative z-50">
+    <div class="text-center mb-6">
+      <div class="p-3 rounded-3xl mx-auto w-44 flex items-center justify-center mb-3">
+        <img src="./logoaccess.png" alt="Access" class="h-11 object-contain filter drop-shadow">
+      </div>
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-300 text-[11px] font-bold tracking-wider uppercase mb-2">
+        <i data-lucide="lock" class="w-3.5 h-3.5"></i> Entorno de Testing Privado
+      </div>
+      <h1 class="text-xl font-black text-white tracking-tight">Acceso Restringido</h1>
+      <p class="text-xs text-slate-300/80 mt-1">Ingresá la clave de testing para desbloquear la aplicación.</p>
+    </div>
+
+    <div class="bg-slate-800/90 backdrop-blur-md p-6 rounded-3xl border border-slate-700 shadow-2xl space-y-4">
+      <div>
+        <label class="block text-xs font-bold uppercase text-slate-300">Clave de Acceso</label>
+        <div class="relative mt-1.5">
+          <input type="password" id="input-gate-pass" placeholder="••••••••"
+            onkeydown="if(event.key==='Enter') verificarGatekeeper()"
+            class="w-full pl-4 pr-10 py-3 bg-slate-900/80 border border-slate-600 rounded-2xl text-white placeholder-slate-500 text-base font-semibold focus:ring-2 focus:ring-amber-400 focus:outline-none">
+          <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-3.5 text-slate-400 hover:text-white">
+            <i id="eye-gate-icon" data-lucide="eye" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <div id="gate-error" class="hidden p-3 bg-red-900/50 border border-red-500/50 rounded-2xl text-red-200 text-xs flex items-center gap-2">
+        <i data-lucide="shield-alert" class="w-4 h-4 text-red-400 flex-shrink-0"></i>
+        <span id="gate-error-msg">Clave incorrecta. Acceso denegado.</span>
+      </div>
+
+      <button type="button" id="btn-gate-submit" onclick="verificarGatekeeper()"
+        class="w-full py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 active:from-amber-700 text-slate-950 font-black rounded-2xl shadow-lg shadow-amber-500/20 transition flex items-center justify-center gap-2">
+        <i data-lucide="unlock" class="w-4 h-4"></i> Desbloquear Portal
+      </button>
+    </div>
+  </div>
+
+  <!-- VISTA DE LOGIN (Inicialmente oculta hasta superar la puerta de acceso) -->
+  <div id="view-login" class="hidden min-h-screen bg-gradient-to-b from-[#0b3558] to-[#071f34] flex flex-col justify-center px-4 py-8 max-w-md mx-auto">
     <div class="text-center mb-6">
       <div class="p-3 rounded-3xl mx-auto w-48 flex items-center justify-center mb-4">
         <img src="./logoaccess.png" alt="Access" class="h-12 object-contain filter drop-shadow">
@@ -1046,13 +1084,93 @@
       lucide.createIcons();
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      lucide.createIcons();
-      const saved = sessionStorage.getItem('user');
-      if (saved) {
-        currentUser = JSON.parse(saved);
-        mostrarApp();
+    // --- LÓGICA DE PUERTA DE ACCESO / GATEKEEPER DE TESTING ---
+    let siteGatePassword = null;
+
+    async function cargarAuthConfig() {
+      try {
+        const res = await fetch('./auth-config.json', { cache: 'no-store' });
+        if (res.ok) {
+          const cfg = await res.json();
+          siteGatePassword = cfg.sitePassword;
+        }
+      } catch (e) {
+        console.warn("auth-config.json no encontrado o inaccesible:", e);
       }
+    }
+
+    function togglePasswordVisibility() {
+      const input = document.getElementById('input-gate-pass');
+      const icon = document.getElementById('eye-gate-icon');
+      if (!input) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        if (icon) icon.setAttribute('data-lucide', 'eye-off');
+      } else {
+        input.type = 'password';
+        if (icon) icon.setAttribute('data-lucide', 'eye');
+      }
+      try { lucide.createIcons(); } catch(e) {}
+    }
+
+    async function verificarGatekeeper() {
+      const passInput = document.getElementById('input-gate-pass');
+      const errBox = document.getElementById('gate-error');
+      const enteredPass = passInput ? passInput.value.trim() : '';
+
+      if (!siteGatePassword) {
+        await cargarAuthConfig();
+      }
+
+      // Si no hay configuración o la clave coincide con la configurada
+      if (siteGatePassword && enteredPass !== siteGatePassword) {
+        if (errBox) errBox.classList.remove('hidden');
+        if (passInput) passInput.focus();
+        return;
+      }
+
+      // Clave válida: desbloquear y guardar sesión de desbloqueo
+      sessionStorage.setItem('gatekeeper_unlocked', 'true');
+      const viewGate = document.getElementById('view-gatekeeper');
+      const viewLogin = document.getElementById('view-login');
+      if (viewGate) viewGate.classList.add('hidden');
+
+      const savedUser = sessionStorage.getItem('user');
+      if (savedUser) {
+        currentUser = JSON.parse(savedUser);
+        mostrarApp();
+      } else {
+        if (viewLogin) viewLogin.classList.remove('hidden');
+      }
+      try { lucide.createIcons(); } catch(e) {}
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      lucide.createIcons();
+      await cargarAuthConfig();
+
+      const unlocked = sessionStorage.getItem('gatekeeper_unlocked') === 'true';
+      const viewGate = document.getElementById('view-gatekeeper');
+      const viewLogin = document.getElementById('view-login');
+
+      // Si no se configuró clave en auth-config.json o ya fue desbloqueado previamente en la sesión
+      if (!siteGatePassword || unlocked) {
+        if (viewGate) viewGate.classList.add('hidden');
+        const saved = sessionStorage.getItem('user');
+        if (saved) {
+          currentUser = JSON.parse(saved);
+          mostrarApp();
+        } else {
+          if (viewLogin) viewLogin.classList.remove('hidden');
+        }
+      } else {
+        // Mostrar exclusivamente la puerta de acceso
+        if (viewGate) viewGate.classList.remove('hidden');
+        if (viewLogin) viewLogin.classList.add('hidden');
+        const passInput = document.getElementById('input-gate-pass');
+        if (passInput) passInput.focus();
+      }
+
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js').catch(() => {});
       }

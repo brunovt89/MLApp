@@ -27,4 +27,6 @@ __pycache__/
 ## Credenciales y configuraciones sensibles
 appsettings*.json
 !appsettings.template.json
+auth-config.json
+!auth-config.template.json
 test_syntax.js
