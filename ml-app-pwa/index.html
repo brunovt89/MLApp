@@ -532,11 +532,7 @@
 
         let filtroTurnosActual = 'futuros';
 
-        // Clasificar turnos
-        const turnosFuturos = turnosData
-          .filter(t => new Date(t.fechaHora) >= ahora)
-          .sort((a, b) => new Date(a.fechaHora) - new Date(b.fechaHora));
-
+        // Clasificar turnos pasados
         const turnosPasados = turnosData
           .filter(t => new Date(t.fechaHora) < ahora)
           .sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora)); // Más recientes primero
