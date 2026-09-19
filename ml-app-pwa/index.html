@@ -123,30 +123,34 @@
 
           <div class="mt-3 mb-4">
             <div class="flex justify-between text-[11px] text-slate-300 mb-1 font-medium">
-              <span>Circuito de Evolución Médica</span>
+              <span id="home-siniestro-circuito-label">Circuito de Evolución Médica</span>
               <span id="home-siniestro-nro" class="font-bold text-sky-300">#--</span>
             </div>
             <div class="w-full bg-slate-700/60 rounded-full h-2 overflow-hidden">
-              <div class="bg-gradient-to-r from-sky-400 to-teal-400 h-2 rounded-full w-4/5"></div>
+              <div id="home-siniestro-progress" class="bg-gradient-to-r from-sky-400 to-teal-400 h-2 rounded-full w-1/4 transition-all duration-500"></div>
             </div>
           </div>
 
-          <div class="space-y-2 text-xs font-medium">
+          <div id="home-siniestro-steps" class="space-y-2 text-xs font-medium">
             <div class="flex items-center gap-2 text-slate-200">
-              <i data-lucide="check-circle" class="w-4 h-4 text-teal-400 flex-shrink-0"></i>
+              <i data-lucide="check-circle-2" class="w-4 h-4 text-teal-400 flex-shrink-0"></i>
               <span>Denuncia & Asignación ART</span>
             </div>
-            <div class="flex items-center gap-2 text-slate-200">
-              <i data-lucide="check-circle" class="w-4 h-4 text-teal-400 flex-shrink-0"></i>
+            <div id="step-iami" class="flex items-center gap-2 text-slate-200">
+              <i data-lucide="clock" class="w-4 h-4 text-sky-400 flex-shrink-0"></i>
               <span>Alta Médica Inicial (IAMI)</span>
             </div>
-            <div class="flex items-center gap-2 text-slate-200">
-              <i data-lucide="clock" class="w-4 h-4 text-sky-400 flex-shrink-0"></i>
+            <div id="step-evol" class="flex items-center gap-2 text-slate-400">
+              <i data-lucide="circle-dashed" class="w-4 h-4 text-slate-500 flex-shrink-0"></i>
               <span>Evolución, Kinesiología & FPA</span>
+            </div>
+            <div id="step-am" class="flex items-center gap-2 text-slate-400">
+              <i data-lucide="circle-dashed" class="w-4 h-4 text-slate-500 flex-shrink-0"></i>
+              <span>Alta Médica Definitiva (AM)</span>
             </div>
           </div>
 
-          <button onclick="switchTab('siniestros')" class="w-full mt-4 py-2 bg-white/10 hover:bg-white/20 active:bg-white/5 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition">
+          <button onclick="switchTab('siniestros')" class="w-full mt-4 py-2.5 bg-white/10 hover:bg-white/20 active:bg-white/5 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition">
             Ver detalle de formularios médicos <i data-lucide="chevron-right" class="w-4 h-4"></i>
           </button>
         </div>
@@ -522,11 +526,19 @@
         const siniestros = await apiRequest(`/Siniestro/PorDocumento/${dni}`);
         siniestrosData = siniestros || [];
 
-        // Actualizar tarjeta en Inicio
-        if (siniestrosData.length > 0) {
-          const s = siniestrosData[0];
-          document.getElementById('home-siniestro-nro').textContent = `#${s.siniestro}`;
-          document.getElementById('home-siniestro-badge').textContent = s.estado || 'En Curso';
+        // 1. SELECCIONAR EL SINIESTRO A MOSTRAR EN HOME:
+        // Priorizar el siniestro que esté ABIERTO / EN CURSO. Si todos están cerrados, tomar el más reciente.
+        const siniestroActivo = siniestrosData.find(s => {
+          const est = (s.estado || '').toLowerCase().trim();
+          return !est.includes('alta') && !est.includes('rechazado');
+        }) || siniestrosData[0];
+
+        if (siniestroActivo) {
+          document.getElementById('home-siniestro-nro').textContent = `#${siniestroActivo.siniestro}`;
+          document.getElementById('home-siniestro-badge').textContent = siniestroActivo.estado || 'En Curso';
+          
+          // Consultar sus formularios para calcular el progreso del circuito de evolución
+          actualizarProgresoCircuitoHome(siniestroActivo);
         }
 
         if (!container) return;
@@ -535,9 +547,9 @@
           return;
         }
 
-        // Renderizar cada siniestro como un ACORDEÓN colapsable (el primero abierto por defecto)
+        // Renderizar cada siniestro como un ACORDEÓN colapsable (el activo o primero abierto por defecto)
         container.innerHTML = siniestrosData.map((s, idx) => {
-          const abierto = idx === 0; // El siniestro más reciente viene desplegado
+          const abierto = siniestroActivo ? (s.siniestro === siniestroActivo.siniestro) : (idx === 0);
           return `
             <div id="card-siniestro-${s.siniestro}" class="bg-white rounded-3xl shadow-sm border border-slate-200/80 overflow-hidden transition-all duration-200">
               <!-- Cabecera Clave / Clickeable para Desplegar -->
@@ -546,7 +558,9 @@
                 <div class="space-y-0.5 min-w-0 pr-2">
                   <div class="flex items-center gap-2">
                     <span class="text-sm font-black text-slate-900">Siniestro #${s.siniestro}</span>
-                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">${s.estado || 'Activo'}</span>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${s.estado && s.estado.toLowerCase().includes('alta') ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                      ${s.estado || 'Activo'}
+                    </span>
                   </div>
                   <p class="text-[11px] text-slate-500">
                     Accidente: <strong>${s.fechaHoraAccidente ? new Date(s.fechaHoraAccidente).toLocaleDateString('es-AR') : 'Registrado'}</strong> • ${s.prestadorNombre || 'Centro Asignado'}
@@ -595,6 +609,64 @@
         if (container) container.innerHTML = `<div class="bg-white rounded-3xl p-6 text-center text-red-500 text-xs">Error al obtener siniestros: ${e.message}</div>`;
       } finally {
         try { lucide.createIcons(); } catch(e) {}
+      }
+    }
+
+    async function actualizarProgresoCircuitoHome(siniestro) {
+      try {
+        const forms = await apiRequest(`/Siniestro/${siniestro.siniestro}/Formularios`);
+        const tipos = (forms || []).map(f => (f.formulario || '').toLowerCase().trim());
+        const tieneAlta = tipos.includes('am') || (siniestro.estado || '').toLowerCase().includes('alta');
+        const tieneEvol = tipos.includes('iet') || tipos.includes('ik') || tipos.includes('fpa') || tipos.includes('fpt');
+        const tieneIami = tipos.includes('iami');
+
+        const elIami = document.getElementById('step-iami');
+        const elEvol = document.getElementById('step-evol');
+        const elAm = document.getElementById('step-am');
+        const progressBar = document.getElementById('home-siniestro-progress');
+        const labelCircuito = document.getElementById('home-siniestro-circuito-label');
+
+        let porcentaje = 25; // Paso 1: Denuncia & Asignación siempre cumplido
+
+        // Paso 2: IAMI
+        if (tieneIami) {
+          porcentaje = 50;
+          if (elIami) {
+            elIami.className = 'flex items-center gap-2 text-slate-200';
+            elIami.innerHTML = '<i data-lucide="check-circle-2" class="w-4 h-4 text-teal-400 flex-shrink-0"></i> <span>Alta Médica Inicial (IAMI)</span>';
+          }
+        }
+
+        // Paso 3: Evolución & Tratamiento
+        if (tieneEvol) {
+          porcentaje = 75;
+          if (elEvol) {
+            elEvol.className = 'flex items-center gap-2 text-slate-200';
+            elEvol.innerHTML = '<i data-lucide="check-circle-2" class="w-4 h-4 text-teal-400 flex-shrink-0"></i> <span>Evolución, Kinesiología & FPA</span>';
+          }
+        }
+
+        // Paso 4: Alta Médica Definitiva (Circuito Completo)
+        if (tieneAlta) {
+          porcentaje = 100;
+          if (labelCircuito) labelCircuito.textContent = 'Circuito Médico Completado';
+          if (elAm) {
+            elAm.className = 'flex items-center gap-2 text-teal-300 font-bold';
+            elAm.innerHTML = '<i data-lucide="check-circle-2" class="w-4 h-4 text-teal-400 flex-shrink-0"></i> <span>Alta Médica Definitiva (AM) Otorgada</span>';
+          }
+          const badge = document.getElementById('home-siniestro-badge');
+          if (badge) {
+            badge.className = 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-400/20 text-emerald-200 border border-emerald-300/30';
+            badge.textContent = 'Tratamiento Finalizado';
+          }
+        }
+
+        if (progressBar) {
+          progressBar.style.width = `${porcentaje}%`;
+        }
+        try { lucide.createIcons(); } catch(e) {}
+      } catch (e) {
+        console.warn("No se pudo calcular progreso:", e);
       }
     }
 
