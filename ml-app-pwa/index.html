@@ -536,36 +536,11 @@
         'END:VCALENDAR'
       ].join('\r\n');
 
-      const isAndroid = /android/i.test(navigator.userAgent);
-
-      if (isAndroid) {
-        const beginTime = inicio.getTime();
-        const endTime = fin.getTime();
-        
-        // 1. Si Web Share API con archivos está soportado, compartir el .ics abre nativamente el diálogo "Abrir con Calendario"
-        try {
-          const file = new File([icsContent], 'turno.ics', { type: 'text/calendar' });
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            navigator.share({
-              files: [file],
-              title: title,
-              text: desc
-            }).catch(() => {});
-            return;
-          }
-        } catch (e) {
-          console.warn('Web Share no disponible, usando intent directo:', e);
-        }
-
-        // 2. Intent universal de Android para la tabla de eventos de calendario (sin forzar package específico)
-        const intentUrl = `intent:#Intent;action=android.intent.action.INSERT;data=content://com.android.calendar/events;type=vnd.android.cursor.dir/event;S.title=${encodeURIComponent(title)};S.description=${encodeURIComponent(desc)};S.eventLocation=${encodeURIComponent(loc)};l.beginTime=${beginTime};l.endTime=${endTime};end`;
-
-        window.location.href = intentUrl;
-        return;
+      // En Android y dispositivos móviles, la URL de Google Calendar con acción TEMPLATE abre la app o la pantalla de confirmación directa del evento
+      const calWindow = window.open(webUrl, '_blank');
+      if (!calWindow) {
+        window.location.href = webUrl;
       }
-
-      // En PC, iOS u otros entornos, abrir Google Calendar web
-      window.open(webUrl, '_blank');
     }
 
     async function cargarTurnos(dni) {
