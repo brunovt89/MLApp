@@ -35,10 +35,10 @@
     </div>
 
     <div class="bg-slate-800/90 backdrop-blur-md p-6 rounded-3xl border border-slate-700 shadow-2xl">
-      <form id="form-login" onsubmit="loginTrabajador(event); return false;" class="space-y-4">
+      <div id="form-login" class="space-y-4">
         <div>
           <label class="block text-xs font-bold uppercase text-slate-300">Número de Documento (DNI)</label>
-          <input type="number" id="input-dni" required value="18599931" placeholder="Ej. 18599931"
+          <input type="number" id="input-dni" value="18599931" placeholder="Ej. 18599931"
             class="mt-1.5 w-full px-4 py-3 bg-slate-900/80 border border-slate-600 rounded-2xl text-white placeholder-slate-500 text-base font-semibold focus:ring-2 focus:ring-sky-400 focus:outline-none">
         </div>
         <div>
@@ -50,11 +50,11 @@
           <i data-lucide="alert-triangle" class="w-4 h-4 text-red-400 flex-shrink-0"></i>
           <span id="login-error-msg"></span>
         </div>
-        <button type="submit" id="btn-submit" onclick="loginTrabajador(event)"
+        <button type="button" id="btn-submit" onclick="loginTrabajador(event)"
           class="w-full py-3.5 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 active:from-blue-700 text-white font-bold rounded-2xl shadow-lg shadow-blue-600/30 transition">
           Ingresar al Portal
         </button>
-      </form>
+      </div>
       <div class="mt-4 pt-3 border-t border-slate-700/60 text-center space-y-2">
         <p class="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Perfiles de prueba disponibles:</p>
         <div class="flex flex-col gap-1.5 text-left text-xs">
