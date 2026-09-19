@@ -223,7 +223,26 @@
 
       <!-- TAB TURNOS -->
       <div id="tab-turnos" class="tab-content space-y-3">
-        <h2 class="text-sm font-bold text-slate-800">Agenda de Turnos Médicos</h2>
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-bold text-slate-800">Agenda de Turnos Médicos</h2>
+        </div>
+
+        <!-- Selector de Filtro Pastilla (Pills) -->
+        <div class="flex bg-slate-200/70 p-1 rounded-2xl gap-1 border border-slate-200">
+          <button id="btn-filtro-futuros" onclick="cambiarFiltroTurnos('futuros')" 
+            class="flex-1 py-1.5 text-xs font-bold rounded-xl transition-all duration-200 bg-white text-sky-900 shadow-sm flex items-center justify-center gap-1.5">
+            <i data-lucide="calendar" class="w-3.5 h-3.5 text-sky-700"></i>
+            <span>Próximos</span>
+            <span id="count-futuros" class="bg-sky-100 text-sky-800 text-[10px] px-1.5 py-0.2 rounded-full font-extrabold">0</span>
+          </button>
+          <button id="btn-filtro-pasados" onclick="cambiarFiltroTurnos('pasados')" 
+            class="flex-1 py-1.5 text-xs font-bold rounded-xl transition-all duration-200 text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5">
+            <i data-lucide="history" class="w-3.5 h-3.5 text-slate-400"></i>
+            <span>Historial</span>
+            <span id="count-pasados" class="bg-slate-300/70 text-slate-700 text-[10px] px-1.5 py-0.2 rounded-full font-extrabold">0</span>
+          </button>
+        </div>
+
         <div id="lista-turnos" class="space-y-2.5"></div>
       </div>
 
@@ -493,15 +512,79 @@
           if (btnHomeCal) btnHomeCal.classList.add('hidden');
         }
 
-        // 2. RENDERIZAR PESTAÑA TURNOS CON ESTADOS ESTRICTOS:
-        // - Futuro (Fecha >= Ahora): "Programado" (con botón de Google Calendar)
-        // - Pasado (Fecha < Ahora) y Concurrio == 1: "Concurrió" (Cumplido)
-        // - Pasado (Fecha < Ahora) y Concurrio != 1: "No Asistió" (Inasistencia)
-        if (!container) return;
-        if (turnosData.length === 0) {
-          container.innerHTML = '<div class="bg-white rounded-3xl p-6 text-center text-slate-400 text-xs">No hay turnos registrados en el sistema.</div>';
-        } else {
-          container.innerHTML = turnosData.map(t => {
+        let filtroTurnosActual = 'futuros';
+
+        // Clasificar turnos
+        const turnosFuturos = turnosData
+          .filter(t => new Date(t.fechaHora) >= ahora)
+          .sort((a, b) => new Date(a.fechaHora) - new Date(b.fechaHora));
+
+        const turnosPasados = turnosData
+          .filter(t => new Date(t.fechaHora) < ahora)
+          .sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora)); // Más recientes primero
+
+        // Actualizar contadores en los botones de filtro
+        const badgeFuturos = document.getElementById('count-futuros');
+        const badgePasados = document.getElementById('count-pasados');
+        if (badgeFuturos) badgeFuturos.textContent = turnosFuturos.length;
+        if (badgePasados) badgePasados.textContent = turnosPasados.length;
+
+        // Si no hay futuros pero sí hay pasados, iniciar mostrando historial para no ver pantalla vacía
+        if (turnosFuturos.length === 0 && turnosPasados.length > 0) {
+          filtroTurnosActual = 'pasados';
+        }
+
+        // Función global para cambiar filtro desde los botones
+        window.cambiarFiltroTurnos = function(filtro) {
+          filtroTurnosActual = filtro;
+          const btnFuturos = document.getElementById('btn-filtro-futuros');
+          const btnPasados = document.getElementById('btn-filtro-pasados');
+
+          if (filtro === 'futuros') {
+            btnFuturos.className = 'flex-1 py-1.5 text-xs font-bold rounded-xl transition-all duration-200 bg-white text-sky-900 shadow-sm flex items-center justify-center gap-1.5';
+            btnPasados.className = 'flex-1 py-1.5 text-xs font-bold rounded-xl transition-all duration-200 text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5';
+          } else {
+            btnPasados.className = 'flex-1 py-1.5 text-xs font-bold rounded-xl transition-all duration-200 bg-white text-sky-900 shadow-sm flex items-center justify-center gap-1.5';
+            btnFuturos.className = 'flex-1 py-1.5 text-xs font-bold rounded-xl transition-all duration-200 text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5';
+          }
+          renderizarListaTurnosFiltrada();
+        };
+
+        function renderizarListaTurnosFiltrada() {
+          if (!container) return;
+
+          const lista = (filtroTurnosActual === 'futuros') ? turnosFuturos : turnosPasados;
+
+          if (lista.length === 0) {
+            if (filtroTurnosActual === 'futuros') {
+              container.innerHTML = `
+                <div class="bg-white rounded-3xl p-6 text-center space-y-3 border border-slate-200/80">
+                  <div class="w-12 h-12 bg-sky-50 text-sky-600 rounded-2xl flex items-center justify-center mx-auto">
+                    <i data-lucide="calendar-check-2" class="w-6 h-6"></i>
+                  </div>
+                  <div>
+                    <h4 class="text-sm font-bold text-slate-800">No tenés turnos futuros pendientes</h4>
+                    <p class="text-xs text-slate-500 mt-1">Cualquier nuevo turno coordinado por la ART aparecerá aquí.</p>
+                  </div>
+                  ${turnosPasados.length > 0 ? `
+                    <button onclick="cambiarFiltroTurnos('pasados')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition inline-flex items-center gap-1.5">
+                      <i data-lucide="history" class="w-3.5 h-3.5"></i> Ver historial de turnos pasados (${turnosPasados.length})
+                    </button>
+                  ` : ''}
+                </div>
+              `;
+            } else {
+              container.innerHTML = `
+                <div class="bg-white rounded-3xl p-6 text-center text-slate-400 text-xs border border-slate-200/80">
+                  No hay historial de turnos anteriores.
+                </div>
+              `;
+            }
+            try { lucide.createIcons(); } catch(e) {}
+            return;
+          }
+
+          container.innerHTML = lista.map(t => {
             const f = new Date(t.fechaHora);
             const esFuturo = f >= ahora;
             const concurrio = String(t.concurrio || '').trim() === '1';
@@ -551,7 +634,12 @@
               </div>
             `;
           }).join('');
+
+          try { lucide.createIcons(); } catch(e) {}
         }
+
+        // Renderizar según estado inicial (ajustando estilo visual de tabs)
+        cambiarFiltroTurnos(filtroTurnosActual);
       } catch (e) {
         console.error("Error turnos:", e);
         if (container) container.innerHTML = `<div class="bg-white rounded-3xl p-6 text-center text-red-500 text-xs">Error al obtener turnos: ${e.message}</div>`;
