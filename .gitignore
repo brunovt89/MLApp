@@ -40,3 +40,9 @@ publish-*/
 *.rar
 *.txt
 
+## Documentos de entrega y entregables
+*.pdf
+INFORME_FINAL_PROYECTO_UTN.md
+/logoaccess.png
+
+
