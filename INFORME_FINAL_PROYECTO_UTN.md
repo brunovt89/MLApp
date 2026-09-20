@@ -1,4 +1,4 @@
-﻿# UNIVERSIDAD TECNOLÓGICA NACIONAL
+# UNIVERSIDAD TECNOLÓGICA NACIONAL
 ## Facultad Regional Buenos Aires
 ### Curso de Inteligencia Artificial para Programadores
 ### Trabajo de Fin de Ciclo — ENTREGA FINAL DE PROYECTO
@@ -53,7 +53,7 @@ flowchart TD
     end
 
     subgraph Persistencia[Capa de Datos Transaccional]
-        F -->|Conexión ADO.NET SQL| G[(SQL Server: FEDERACIONPATRONAL_TEST)]
+        F -->|Conexión ADO.NET SQL| G[(SQL Server: Base de Datos Transaccional ART)]
         G --> H[Tablas: Siniestros, Turnos, Formularios, Trabajadores]
     end
 
@@ -74,7 +74,7 @@ flowchart TD
   - Co-diseño y generación de diagramas arquitectónicos y optimización de consultas SQL.
 
 #### 2.3 Memoria Persistente del Sistema
-La memoria persistente reside en **Microsoft SQL Server (FEDERACIONPATRONAL_TEST)**, estructurada en tablas relacionales con integridad referencial: Trabajadores, Siniestros, TurnosSiniestro y SiniestrosFormularios. En el cliente móvil, la sesión se preserva temporalmente mediante sessionStorage.
+La memoria persistente reside en **Microsoft SQL Server (Base de Datos Transaccional ART)**, estructurada en tablas relacionales con integridad referencial: Trabajadores, Siniestros, TurnosSiniestro y SiniestrosFormularios. En el cliente móvil, la sesión se preserva temporalmente mediante sessionStorage.
 
 #### 2.4 Diagrama UML de Secuencia (Flujo Principal de Consulta de Siniestro y Turnos)
 `mermaid
@@ -123,7 +123,7 @@ sequenceDiagram
 | :--- | :--- | :--- |
 | **Frontend** | HTML5, Tailwind CSS, Lucide Icons, Vanilla JS (PWA) | Garantiza tiempos de carga inferiores a 500ms en conexiones móviles de baja calidad (3G/4G), elimina la sobrecarga de empaquetadores pesados (Webpack/Node en cliente) y permite instalación nativa standalone sin pasar obligatoriamente por tiendas de aplicaciones. |
 | **Backend** | ASP.NET Core Web API en **.NET 10.0** | Provee rendimiento de clase mundial, compilación nativa AOT/SingleFile, inyección de dependencias robusta e integración nativa con IIS en infraestructura Windows Server corporativa de la ART. |
-| **Base de Datos** | Microsoft SQL Server (FEDERACIONPATRONAL_TEST) | Es el estándar consolidado en la compañía para trazabilidad transaccional ACID, asegurando consistencia absoluta en historias clínicas, siniestros y auditorías de la SRT. |
+| **Base de Datos** | Microsoft SQL Server | Es el estándar consolidado en la compañía para trazabilidad transaccional ACID, asegurando consistencia absoluta en historias clínicas, siniestros y auditorías de la SRT. |
 | **Modelo de IA** | Ollama local (llama3.2:3b / phi4-mini) | Permite procesar texto clínico y realizar triaje sin violar la Ley de Protección de Datos Personales (Ley 25.326), manteniendo costo cero por token y disponibilidad offline. |
 | **Orquestación** | Código propio en C# y JavaScript con MCP (Model Context Protocol) | Control granular de endpoints y validaciones de negocio sin dependencias excesivas de frameworks de agentes que añaden latencia. |
 | **Despliegue** | Servidor IIS (Windows Server) en puerto HTTPS 8443 | Integración directa en el Data Center empresarial con certificado SSL, directorio virtual configurado y alta disponibilidad. |
@@ -159,7 +159,7 @@ sequenceDiagram
 
 #### 5.2 Evaluación orientada al público objetivo
 - **Nivel técnico:** Diseñado para trabajadores de obra, operarios de fábrica y choferes; la interfaz es directa, táctil, con botones de gran tamaño y tipografía de alta legibilidad.
-- **Lenguaje claro:** Se transformaron códigos internos de la SRT (IAMI, IET, FPA, AM) en etiquetas comprensibles (*Alta Médica Inicial*, *Evolución y Kinesiología*, *Alta Definitiva*).
+- **Lenguaje claro:** Se transformaron códigos internos de la SRT (IAMI, IET, FPA, AM) en etiquetas comprensibles (*Atención Médica Inicial*, *Evolución y Kinesiología*, *Alta Definitiva*).
 
 ---
 

@@ -1,4 +1,4 @@
-﻿namespace MLApp.Api.DTOs
+namespace MLApp.Api.DTOs
 {
     public class LoginRequestDto
     {
@@ -74,6 +74,16 @@
         public string? DetalleAdicional { get; set; }
     }
 
+    public class EstudioExamenDto
+    {
+        public int ExamenRealizado { get; set; }
+        public int Secuencia { get; set; }
+        public string? NombreEstudio { get; set; }
+        public string? Observaciones { get; set; }
+        public string? ResultadoEstudio { get; set; }
+        public DateTime? FechaRealizacion { get; set; }
+    }
+
     public class ExamenDto
     {
         public int IdExamenRealizado { get; set; }
@@ -84,5 +94,6 @@
         public DateTime? FechaAutorizacion { get; set; }
         public string? Empleador { get; set; }
         public string? Profesional { get; set; }
+        public List<EstudioExamenDto> Estudios { get; set; } = new();
     }
 }

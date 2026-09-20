@@ -1,4 +1,4 @@
-﻿# MLApp - Portal Mobile del Trabajador (Access Salud & ART)
+# MLApp - Portal Mobile del Trabajador (Access Salud & ART)
 
 Aplicación móvil PWA y Backend REST en **.NET 10.0** para la autogestión de Medicina Laboral y seguimiento integral de siniestros de ART (Federación Patronal ART / Access Salud).
 
@@ -21,7 +21,7 @@ Aplicación móvil PWA y Backend REST en **.NET 10.0** para la autogestión de M
 | :--- | :--- | :--- |
 | **Frontend Mobile** | HTML5, Tailwind CSS, Lucide Icons, Vanilla JS (PWA) | Máxima velocidad de carga, sin dependencias pesadas de frameworks, soporte offline nativo vía Service Worker e instalable como App nativa en Android/iOS. |
 | **Backend API** | ASP.NET Core Web API en **.NET 10.0** | Alto rendimiento, compatibilidad nativa con IIS en Windows Server, inyección de dependencias y Swagger OpenAPI interactivo. |
-| **Base de Datos** | Microsoft SQL Server (FEDERACIONPATRONAL_TEST) | Motor transaccional relacional robusto con Stored Procedures y consultas optimizadas para trazabilidad médica y de siniestros. |
+| **Base de Datos** | Microsoft SQL Server | Motor transaccional relacional robusto con Stored Procedures y consultas optimizadas para trazabilidad médica y de siniestros. |
 | **Seguridad** | Encabezado X-Api-Key + Gatekeeper de Testing | Protección de endpoints mediante token de seguridad precompartido y control de acceso restringido para entorno de pruebas. |
 | **IA Local** | Ollama (llama3.2:3b / phi4-mini) | Procesamiento local confidencial para resúmenes de evolución médica y asistencia sin fuga de datos sensibles a la nube. |
 
@@ -34,7 +34,7 @@ Aplicación móvil PWA y Backend REST en **.NET 10.0** para la autogestión de M
    - Generación dinámica de Credencial Digital con código QR oficial para validación en centros médicos y farmacias.
 2. **Seguimiento Dinámico de Siniestros (Circuito Clínico):**
    - La pantalla principal prioriza el siniestro activo (en curso).
-   - Cálculo dinámico de etapas: Denuncia -> Alta Médica Inicial (IAMI) -> Evolución y Kinesiología (IET/FPA) -> Alta Médica Definitiva (AM).
+   - Cálculo dinámico de etapas: Denuncia -> Atención Médica Inicial (IAMI) -> Evolución y Kinesiología (IET/FPA) -> Alta Médica Definitiva (AM).
    - Visualización de siniestros en acordeón interactivo con listado cronológico de formularios clínicos (lo más reciente arriba).
 3. **Agenda Inteligente de Turnos:**
    - Filtro por pestañas: **Próximos** (futuros) vs. **Historial** (pasados).

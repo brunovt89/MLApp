@@ -184,7 +184,7 @@ namespace MLApp.Api.Services
         public async Task<IEnumerable<ExamenDto>> ObtenerExamenesPorDniAsync(int numeroDocumento)
         {
             using var connection = new SqlConnection(_connectionString);
-            string sql = @"
+            string sqlExamenes = @"
                 SELECT TOP 30
                     er.ExamenRealizado AS IdExamenRealizado,
                     er.FechaExamen,
@@ -202,7 +202,38 @@ namespace MLApp.Api.Services
                   AND (t.Baja IS NULL OR t.Baja = ' ' OR t.Baja = '0')
                 ORDER BY er.FechaExamen DESC";
 
-            return await connection.QueryAsync<ExamenDto>(sql, new { NumeroDocumento = numeroDocumento });
+            var examenes = (await connection.QueryAsync<ExamenDto>(sqlExamenes, new { NumeroDocumento = numeroDocumento })).ToList();
+            if (!examenes.Any()) return examenes;
+
+            var idsExamen = examenes.Select(e => e.IdExamenRealizado).ToList();
+            string sqlEstudios = @"
+                SELECT 
+                    eer.ExamenRealizado,
+                    eer.Secuencia,
+                    COALESCE(RTRIM(p.Descripcion), RTRIM(eer.Observaciones), 'Estudio Clínico') AS NombreEstudio,
+                    RTRIM(eer.Observaciones) AS Observaciones,
+                    RTRIM(eer.ResultadoEstudio) AS ResultadoEstudio,
+                    eer.FechaRealizacion
+                FROM EstudiosExamenRealizado eer WITH (NOLOCK)
+                LEFT JOIN Prestaciones p WITH (NOLOCK) 
+                    ON eer.SubNomencladorEstudio = p.SubNomenclador 
+                   AND eer.PrestacionEstudio = p.Prestacion 
+                   AND eer.LetraEstudio = p.Letra
+                WHERE eer.ExamenRealizado IN @IdsExamen
+                ORDER BY eer.ExamenRealizado, eer.Secuencia";
+
+            var estudios = await connection.QueryAsync<EstudioExamenDto>(sqlEstudios, new { IdsExamen = idsExamen });
+            var gruposEstudios = estudios.GroupBy(e => e.ExamenRealizado).ToDictionary(g => g.Key, g => g.ToList());
+
+            foreach (var ex in examenes)
+            {
+                if (gruposEstudios.TryGetValue(ex.IdExamenRealizado, out var lista))
+                {
+                    ex.Estudios = lista;
+                }
+            }
+
+            return examenes;
         }
     }
 }

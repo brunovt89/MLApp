@@ -30,3 +30,13 @@ appsettings*.json
 auth-config.json
 !auth-config.template.json
 test_syntax.js
+
+## Publicaciones y artefactos de compilación
+publish/
+publish-*/
+**/publish/
+**/publish-*/
+*.zip
+*.rar
+*.txt
+
