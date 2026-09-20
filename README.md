@@ -2,9 +2,6 @@
 
 Aplicación móvil PWA y Backend REST en **.NET 10.0** para la autogestión de Medicina Laboral y seguimiento integral de siniestros de ART.
 
-> **Proyecto Final - Inteligencia Artificial para Programadores**  
-> **Universidad Tecnológica Nacional (UTN BA - Centro de e-Learning)**  
-
 ---
 
 ## Enlaces del Proyecto
