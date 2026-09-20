@@ -1,10 +1,9 @@
 # MLApp - Portal Mobile del Trabajador (Access Salud & ART)
 
-Aplicación móvil PWA y Backend REST en **.NET 10.0** para la autogestión de Medicina Laboral y seguimiento integral de siniestros de ART (Federación Patronal ART / Access Salud).
+Aplicación móvil PWA y Backend REST en **.NET 10.0** para la autogestión de Medicina Laboral y seguimiento integral de siniestros de ART.
 
 > **Proyecto Final - Inteligencia Artificial para Programadores**  
 > **Universidad Tecnológica Nacional (UTN BA - Centro de e-Learning)**  
-> **Estudiante:** Bruno Taraborrelli  
 
 ---
 
@@ -62,7 +61,6 @@ Aplicación móvil PWA y Backend REST en **.NET 10.0** para la autogestión de M
 │   ├── icon-192.png          # Icono de app para Android/iOS
 │   ├── icon-512.png          # Icono de alta resolución
 │   └── logoaccess.png        # Logo transparente adaptable
-├── INFORME_FINAL_PROYECTO_UTN.md # Informe técnico completo de entrega
 └── .gitignore                # Reglas estrictas de exclusión de secretos
 `
 
