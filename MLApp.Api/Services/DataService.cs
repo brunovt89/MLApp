@@ -44,7 +44,7 @@ namespace MLApp.Api.Services
                 FROM Trabajadores t WITH (NOLOCK)
                 LEFT JOIN Empleadores e WITH (NOLOCK) ON t.Empleador = e.Empleador
                 WHERE t.NumeroDocumento = @NumeroDocumento
-                  AND t.Baja = 0";
+                  AND (t.Baja IS NULL OR t.Baja = ' ' OR t.Baja = '0')";
 
             var trabajador = await connection.QueryFirstOrDefaultAsync<TrabajadorDto>(sql, new { NumeroDocumento = numeroDocumento });
             if (trabajador == null) return null;
@@ -80,7 +80,7 @@ namespace MLApp.Api.Services
                 FROM Trabajadores t WITH (NOLOCK)
                 LEFT JOIN Empleadores e WITH (NOLOCK) ON t.Empleador = e.Empleador
                 WHERE t.NumeroDocumento = @NumeroDocumento
-                  AND t.Baja = 0";
+                  AND (t.Baja IS NULL OR t.Baja = ' ' OR t.Baja = '0')";
 
             return await connection.QueryFirstOrDefaultAsync<TrabajadorDto>(sql, new { NumeroDocumento = numeroDocumento });
         }
@@ -113,7 +113,7 @@ namespace MLApp.Api.Services
                 LEFT JOIN Profesionales pr WITH (NOLOCK) ON ts.IdProfesional = pr.Profesional
                 LEFT JOIN Especialidades e WITH (NOLOCK) ON ts.IdEspecialidad = e.Especialidad
                 WHERE t.NumeroDocumento = @NumeroDocumento
-                  AND t.Baja = 0
+                  AND (t.Baja IS NULL OR t.Baja = ' ' OR t.Baja = '0')
                   AND ts.Anulado = 0";
 
             if (soloFuturos)
@@ -148,7 +148,7 @@ namespace MLApp.Api.Services
                 LEFT JOIN Prestadores p WITH (NOLOCK) ON s.Prestador = p.Prestador
                 LEFT JOIN Arts a WITH (NOLOCK) ON s.Art = a.Art
                 WHERE t.NumeroDocumento = @NumeroDocumento
-                  AND t.Baja = 0
+                  AND (t.Baja IS NULL OR t.Baja = ' ' OR t.Baja = '0')
                 ORDER BY s.FechaHoraAccidente DESC";
 
             return await connection.QueryAsync<SiniestroDto>(sql, new { NumeroDocumento = numeroDocumento });
@@ -199,7 +199,7 @@ namespace MLApp.Api.Services
                 LEFT JOIN Empleadores em WITH (NOLOCK) ON er.Empleador = em.Empleador
                 LEFT JOIN Profesionales pr WITH (NOLOCK) ON er.Profesional = pr.Profesional
                 WHERE t.NumeroDocumento = @NumeroDocumento
-                  AND t.Baja = 0
+                  AND (t.Baja IS NULL OR t.Baja = ' ' OR t.Baja = '0')
                 ORDER BY er.FechaExamen DESC";
 
             return await connection.QueryAsync<ExamenDto>(sql, new { NumeroDocumento = numeroDocumento });
