@@ -4,13 +4,6 @@ Aplicación móvil PWA y Backend REST en **.NET 10.0** para la autogestión de M
 
 ---
 
-## Enlaces del Proyecto
-- **Repositorio GitHub:** [https://github.com/brunovt89/MLApp.git](https://github.com/brunovt89/MLApp.git)
-- **Aplicación en Producción:** [https://ejemplo.com/MLApp/mobile/](https://ejemplo.com/MLApp/mobile/)
-- **Swagger API (Producción):** [https://ejemplo.com/MLApp/](https://ejemplo.com/MLApp/)
-
----
-
 ## Arquitectura y Stack Tecnológico
 
 | Capa | Tecnología | Justificación Técnica |
