@@ -43,7 +43,7 @@ Aplicación móvil PWA y Backend REST en **.NET 10.0** para la autogestión de M
 
 ## Estructura del Repositorio
 
-`	ext
+```text
 ├── MLApp.Api/                # Backend ASP.NET Core .NET 10.0
 │   ├── Controllers/          # Auth, Turno, Siniestro, Examen
 │   ├── Services/             # Capa de datos Dapper / ADO.NET
@@ -59,7 +59,7 @@ Aplicación móvil PWA y Backend REST en **.NET 10.0** para la autogestión de M
 │   ├── icon-512.png          # Icono de alta resolución
 │   └── logoaccess.png        # Logo transparente adaptable
 └── .gitignore                # Reglas estrictas de exclusión de secretos
-`
+```
 
 ---
 
@@ -71,20 +71,20 @@ Aplicación móvil PWA y Backend REST en **.NET 10.0** para la autogestión de M
 - SQL Server con base de datos configurada
 
 ### 1. Levantar la API (.NET 10.0)
-`ash
+```bash
 cd MLApp.Api
 # Crear appsettings.json copiando appsettings.template.json y completando la cadena de conexión
 dotnet run --no-launch-profile
 # La API quedará disponible en http://localhost:5000
-`
+```
 
 ### 2. Levantar la PWA Mobile
-`ash
+```bash
 cd ml-app-pwa
 # Crear auth-config.json copiando auth-config.template.json
 python -m http.server 3000
 # Abrir en el navegador: http://localhost:3000
-`
+```
 
 ---
 
